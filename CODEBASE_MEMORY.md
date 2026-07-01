@@ -2,7 +2,7 @@
 
 > **Project**: GERKINK — Provocative Luxury Streetwear E-Commerce
 > **Framework**: Next.js 16.2.9 (App Router) + React 19.2.4
-> **Last Updated**: 2026-06-26
+> **Last Updated**: 2026-07-01
 
 ---
 
@@ -171,6 +171,7 @@ All server-side modules (`lib/firebase/admin.ts`, `lib/printify/client.ts`, `lib
 | `milestones` | $100K milestone records | affiliateUid, reward, status |
 | `settings` | Global settings & copy | (doc `global`): siteActive, etc. (doc `copywriting`): homepage hero lines, manifesto grid list, owners details, footer tagline |
 | `contact_messages` | Contact form submissions | name, email, message |
+| `reviews` | Live customer reviews & ratings | userId, userName, userPhoto, rating, text, createdAt |
 
 ---
 
@@ -206,3 +207,7 @@ npm run lint     # ESLint
 | Dashboard Date & Sort Fix | `src/app/account/page.tsx` | Implemented `formatFirestoreDate()` and `getTimestampTime()` helpers to parse Firestore `Timestamp` objects correctly, fixing "Invalid Date" text and sorting in payout history. |
 | Checkout SSR Redirect Fix | `src/app/checkout/page.tsx`, `src/lib/firebase/config.ts` | Wrapped empty-cart redirect in client-only `useEffect` on mount. Hardened `createLazyProxy()` to ignore framework property access checks (e.g. `$$typeof`, `then`), preventing `ReferenceError: location is not defined` during SSR page prerendering. |
 | Webhook Fallback & Idempotency | `src/app/api/payment/webhook/route.ts` | Implemented full Printify submission and referral processing inside the Razorpay Webhook to capture offline redirection states, guarded by status idempotency checks. |
+| Printify Webhook HMAC | `src/app/api/printify/webhook/*` | Hardened printify webhook with HMAC-SHA256 signature verification and created a CLI helper script (`scripts/register-printify-webhook.js`) to programmatically register subscriptions. |
+| Product & Card Sizing Layouts | `src/app/shop/*`, `src/components/*` | Capped product gallery image layout at 1:1 aspect ratio and `object-fit: contain` to prevent viewport overflow, and adjusted product grid/cards. |
+| Live Reviews System | `src/app/page.tsx`, `src/components/reviews/*` | Integrated live reviews section with interactive star selector, add/edit modal forms, real-time Firestore synchronization, and rules allowing users edit access and admins deletion rights. |
+| Profile settings Hub | `src/app/account/*`, `src/app/page.module.css` | Created a Profile settings tab inside the account dashboard to support profile image upload to Firebase Storage, name updates, and password changes, leaving email read-only. |
