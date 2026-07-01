@@ -54,6 +54,12 @@ export default function Footer() {
               <Link href="/auth/signup">Join</Link>
               <Link href="/account">Dashboard</Link>
             </div>
+            <div className={styles.linkGroup}>
+              <span className={styles.groupLabel}>Legal</span>
+              <Link href="/terms">Terms &amp; Conditions</Link>
+              <Link href="/refund">Refund &amp; Replace</Link>
+              <Link href="/shipping">Shipment</Link>
+            </div>
           </nav>
         </div>
 
