@@ -1,19 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import crypto from 'crypto';
 
 /**
  * Verify Printify webhook authenticity.
- * Checks the X-Printify-Webhook-Token header against our configured secret.
+ * First checks for the official Printify signature (x-pfy-signature) using HMAC-SHA256.
+ * Falls back to token verification (x-printify-webhook-token) for manual testing.
  */
-function verifyPrintifyWebhook(request: NextRequest): boolean {
+function verifyPrintifyWebhook(rawBody: string, request: NextRequest): boolean {
   const secret = process.env.PRINTIFY_WEBHOOK_SECRET;
-  // If no secret is configured, reject all requests for safety
   if (!secret) {
     console.error('PRINTIFY_WEBHOOK_SECRET is not configured — rejecting webhook');
     return false;
   }
 
+  // 1. Official Signature Check (HMAC-SHA256)
+  const signature = request.headers.get('x-pfy-signature');
+  if (signature) {
+    const cleanSignature = signature.replace('sha256=', '');
+    const expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
+    try {
+      if (crypto.timingSafeEqual(Buffer.from(expected, 'hex'), Buffer.from(cleanSignature, 'hex'))) {
+        return true;
+      }
+    } catch (err) {
+      console.warn('Printify signature comparison failed, falling back to token check.');
+    }
+  }
+
+  // 2. Token Fallback Check (for testing or direct header auth)
   const token = request.headers.get('x-printify-webhook-token')
     || request.headers.get('authorization')?.replace('Bearer ', '');
 
@@ -34,16 +50,24 @@ const STATUS_RANK: Record<string, number> = {
 };
 
 export async function POST(request: NextRequest) {
-  // 1. Authenticate webhook
-  if (!verifyPrintifyWebhook(request)) {
-    console.warn('Printify webhook rejected: invalid or missing authentication token');
+  // 1. Read raw body as text for signature validation
+  let rawBody = '';
+  try {
+    rawBody = await request.text();
+  } catch (err) {
+    return NextResponse.json({ error: 'Failed to read request body' }, { status: 400 });
+  }
+
+  // 2. Authenticate webhook
+  if (!verifyPrintifyWebhook(rawBody, request)) {
+    console.warn('Printify webhook rejected: invalid or missing authentication signature/token');
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // 2. Parse body
-  let body: Record<string, unknown>;
+  // 3. Parse JSON body
+  let body: Record<string, any>;
   try {
-    body = await request.json();
+    body = JSON.parse(rawBody);
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
