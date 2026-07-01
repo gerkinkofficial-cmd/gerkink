@@ -1,0 +1,349 @@
+/* ─── Hero ─── */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  padding-top: 68px; /* navbar height */
+}
+
+/* Ambient glow blobs */
+.ambientLeft {
+  position: absolute;
+  top: 20%;
+  left: -15%;
+  width: 55vw;
+  height: 55vw;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(107, 138, 171, 0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.ambientRight {
+  position: absolute;
+  bottom: 10%;
+  right: -10%;
+  width: 40vw;
+  height: 40vw;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 107, 107, 0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.heroInner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 5rem clamp(1rem, 4vw, 4rem);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.heroText {
+  max-width: 900px;
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+.heroText.loaded { opacity: 1; }
+
+/* ─── Staggered Headline ─── */
+.headlineWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 2.5rem;
+}
+
+/* Both lines share the .text-hero scale but different color/weight */
+.line1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 900;
+  font-size: clamp(2.5rem, 8vw, 7.5rem);
+  line-height: 0.92;
+  letter-spacing: -0.05em;
+  color: var(--text-secondary);   /* muted — builds tension */
+  display: block;
+  opacity: 0;
+}
+
+.line2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 900;
+  font-size: clamp(3rem, 10vw, 9.5rem);
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+  color: var(--text-primary);   /* brighter */
+  display: block;
+  opacity: 0;
+}
+
+.lineAccent {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 900;
+  font-size: clamp(4rem, 14vw, 14rem);
+  line-height: 0.87;
+  letter-spacing: -0.06em;
+  color: var(--accent);  /* the one bold color choice */
+  display: inline-block;
+  opacity: 0;
+  margin-top: 0.1em;
+}
+
+.noWrap {
+  white-space: nowrap;
+}
+
+.subText {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(0.875rem, 1.5vw, 1.1rem);
+  font-weight: 500;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 2.5rem;
+  opacity: 0;
+}
+
+.ctaRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  opacity: 0;
+}
+
+.ctaBtn {
+  letter-spacing: 0.12em;
+}
+
+/* Floating price tags — decorative, positioned absolutely relative to hero */
+.floatingTags {
+  position: absolute;
+  right: clamp(1rem, 4vw, 4rem);
+  bottom: 6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1rem;
+  pointer-events: none;
+}
+
+.floatTag {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+.floatTag1 {
+  font-size: clamp(1rem, 2.5vw, 2rem);
+  animation: float 8s ease-in-out infinite;
+}
+.floatTag2 {
+  font-size: clamp(0.75rem, 1.5vw, 1.25rem);
+  animation: float 6s 1s ease-in-out infinite;
+  color: var(--accent);
+  opacity: 0.3;
+}
+.floatTag3 {
+  font-size: clamp(0.875rem, 2vw, 1.5rem);
+  animation: float 9s 2s ease-in-out infinite;
+}
+
+/* ─── Section Split ─── */
+.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 80vh;
+}
+
+.splitPanel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: clamp(2rem, 5vw, 4rem);
+  min-height: 500px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.4s ease;
+}
+.splitPanel:hover { transform: none; }
+
+.splitLeft {
+  background: var(--bg);
+  border-right: 1px solid var(--border);
+}
+.splitRight {
+  background: var(--surface);
+}
+
+.splitOverlay {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+.splitLeft  .splitOverlay { background: radial-gradient(ellipse at 30% 70%, rgba(107,138,171,0.12) 0%, transparent 60%); }
+.splitRight .splitOverlay { background: radial-gradient(ellipse at 70% 70%, rgba(255,107,107,0.1) 0%, transparent 60%); }
+.splitPanel:hover .splitOverlay { opacity: 1; }
+
+.splitContent {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.splitTitle {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 900;
+  font-size: clamp(2.5rem, 5vw, 5rem);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  color: var(--text-primary);
+  margin-top: 0.75rem;
+  transition: color 0.2s ease;
+}
+.splitLeft:hover  .splitTitle { color: var(--mist-100); }
+.splitRight:hover .splitTitle { color: var(--coral-100); }
+
+.splitDesc {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.splitCta {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-top: 1rem;
+  transition: color 0.2s ease, transform 0.2s ease;
+  display: inline-block;
+}
+.splitLeft:hover  .splitCta { color: var(--mist-100); transform: translateX(4px); }
+.splitRight:hover .splitCta { color: var(--accent);   transform: translateX(4px); }
+
+/* ─── Social Proof ─── */
+.socialProof {
+  background: var(--surface-2);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 2rem clamp(1rem, 4vw, 4rem);
+}
+
+.proofInner {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.proofNumber {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  color: var(--accent);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.proofText {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  max-width: 240px;
+  line-height: 1.4;
+}
+
+.proofDots {
+  display: flex;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+.proofDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulseGlow 1.8s ease-in-out infinite;
+}
+
+/* ─── Brand Statement ─── */
+.statement {
+  padding: clamp(4rem, 10vw, 8rem) 0;
+  border-top: 1px solid var(--border);
+}
+
+.statementInner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+.statementTitle {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 900;
+  font-size: clamp(2rem, 4vw, 4rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--text-primary);
+}
+
+.statementAccent {
+  color: var(--mist-100);
+}
+
+.statementRight {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.statementBody {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 900px) {
+  .heroInner { flex-direction: column; align-items: flex-start; }
+  .floatingTags { position: static; flex-direction: row; margin-top: 2rem; opacity: 0.4; }
+  .split { grid-template-columns: 1fr; min-height: auto; }
+  .splitPanel { min-height: 340px; }
+  .statementInner { grid-template-columns: 1fr; gap: 2rem; }
+}
+
+@media (max-width: 480px) {
+  .lineAccent { font-size: 3.5rem; }
+  .ctaRow { flex-direction: column; align-items: flex-start; }
+}
+
+@keyframes float {
+  0%,100% { transform: translateY(0) rotate(0deg); }
+  33%      { transform: translateY(-14px) rotate(1.2deg); }
+  66%      { transform: translateY(-7px) rotate(-0.6deg); }
+}
+
+@keyframes pulseGlow {
+  0%,100% { box-shadow: 0 0 0 0 rgba(255,107,107,0); }
+  50%      { box-shadow: 0 0 24px 4px rgba(255,107,107,0.28); }
+}

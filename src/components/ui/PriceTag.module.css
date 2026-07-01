@@ -1,0 +1,24 @@
+.tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  display: inline-block;
+}
+.sm  { font-size: 0.875rem; }
+.md  { font-size: 1.25rem; }
+.lg  { font-size: 2rem; }
+.xl  { font-size: clamp(2.5rem, 5vw, 4rem); }
+
+.symbol { opacity: 0.6; font-size: 0.7em; vertical-align: super; }
+
+.animate {
+  display: inline-block;
+  animation: priceSlap 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes priceSlap {
+  0%   { transform: scale(4) rotate(-8deg); opacity: 0; }
+  55%  { transform: scale(0.94) rotate(0.5deg); opacity: 1; }
+  75%  { transform: scale(1.04); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}

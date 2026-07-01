@@ -1,0 +1,9 @@
+.payBtn {
+  animation: pulseGlow 2.5s ease-in-out infinite;
+}
+.payBtn:hover { animation: none; }
+
+@keyframes pulseGlow {
+  0%,100% { box-shadow: 0 0 0 0 rgba(255,107,107,0); }
+  50%      { box-shadow: 0 0 24px 4px rgba(255,107,107,0.28); }
+}

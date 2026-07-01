@@ -1,0 +1,21 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
+  text-align: center;
+}
+
+.emptyText {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1rem;
+  font-style: italic;
+  color: var(--text-muted);
+  max-width: 400px;
+}

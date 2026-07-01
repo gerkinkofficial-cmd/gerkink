@@ -1,0 +1,87 @@
+.page { padding-top: 68px; min-height: 100vh; }
+
+.inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: clamp(4rem, 10vw, 8rem) clamp(1rem, 4vw, 4rem);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5rem;
+  align-items: flex-start;
+}
+
+.left { display: flex; flex-direction: column; gap: 1.25rem; }
+
+.title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 900;
+  font-size: clamp(3rem, 7vw, 7rem);
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  color: var(--text-primary);
+}
+
+.desc { font-size: 1rem; color: var(--text-secondary); line-height: 1.65; max-width: 400px; }
+
+.channels { margin-top: 1rem; }
+.channelNote { font-size: 0.8rem; font-style: italic; color: var(--text-muted); display: block; }
+.emailContainer {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.emailTagline {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.emailLink {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  padding-bottom: 2px;
+  width: fit-content;
+  transition: all 0.2s ease;
+}
+.emailLink:hover {
+  border-bottom-color: var(--accent);
+  opacity: 0.85;
+}
+
+.form { display: flex; flex-direction: column; gap: 1.5rem; }
+
+.textarea { resize: vertical; min-height: 120px; font-family: 'Inter', sans-serif; }
+
+.fieldError { display: block; margin-top: 0.35rem; font-size: 0.72rem; color: var(--coral-200); }
+
+.success {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 2.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.successIcon { font-size: 1.5rem; color: var(--accent); }
+
+.successTitle {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.successDesc { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.6; }
+
+@media (max-width: 768px) {
+  .inner { grid-template-columns: 1fr; gap: 3rem; }
+}
