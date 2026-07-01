@@ -2,8 +2,8 @@
 
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useMemo } from 'react';
-import { getFirestoreDb, getFirestoreModule } from '@/lib/firebase/config';
+import { useEffect, useState, useMemo, useRef } from 'react';
+import { getFirestoreDb, getFirestoreModule, getFirebaseStorage, getStorageModule, getFirebaseAuth } from '@/lib/firebase/config';
 import { useRoast } from '@/hooks/useRoast';
 import styles from './page.module.css';
 import type { Coupon, Referral, Order } from '@/types';
@@ -42,7 +42,23 @@ export default function AccountPage() {
   const [claimType, setClaimType] = useState<'refund' | 'coupon' | 'wise' | 'paypal' | 'bank'>('coupon');
   const [selectedOrderId, setSelectedOrderId] = useState<string>('');
   const [claimAmount, setClaimAmount] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'payouts' | 'analytics' | 'rewards'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'payouts' | 'analytics' | 'rewards' | 'profile'>('dashboard');
+
+  // Profile Settings State
+  const [profileName, setProfileName] = useState('');
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [updatingProfile, setUpdatingProfile] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (user) {
+      setProfileName(user.displayName || '');
+      setProfilePhotoUrl(user.photoURL || '');
+    }
+  }, [user]);
 
   // Payout Preferences State
   const [payoutPrefs, setPayoutPrefs] = useState<any>(null);
@@ -318,6 +334,98 @@ export default function AccountPage() {
       toast(err.message || 'Failed to save payout settings', 'error');
     } finally {
       setSavingPrefs(false);
+    }
+  }
+
+  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast('Please select an image file', 'error');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast('Image size must be less than 2MB', 'error');
+      return;
+    }
+
+    setUploadingPhoto(true);
+    try {
+      const { ref, uploadBytes, getDownloadURL } = getStorageModule();
+      const storage = getFirebaseStorage();
+      const fileRef = ref(storage, `users/${user.uid}/profile_${Date.now()}`);
+      const snapshot = await uploadBytes(fileRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      
+      setProfilePhotoUrl(downloadURL);
+      toast('Photo uploaded successfully! Save profile to commit changes.', 'success');
+    } catch (err: any) {
+      toast(err.message || 'Error uploading image', 'error');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  }
+
+  async function handleProfileUpdate(e: React.FormEvent) {
+    e.preventDefault();
+    if (!user) return;
+    if (!profileName.trim()) {
+      toast('Name cannot be empty', 'error');
+      return;
+    }
+
+    setUpdatingProfile(true);
+    try {
+      // 1. Update Password if entered
+      if (newPassword) {
+        if (newPassword !== confirmPassword) {
+          throw new Error('Passwords do not match');
+        }
+        if (newPassword.length < 6) {
+          throw new Error('Password must be at least 6 characters long');
+        }
+
+        const { updatePassword } = require('firebase/auth') as typeof import('firebase/auth');
+        const auth = getFirebaseAuth();
+        if (auth.currentUser) {
+          await updatePassword(auth.currentUser, newPassword);
+        } else {
+          throw new Error('Not logged into Firebase Auth');
+        }
+      }
+
+      // 2. Update Firebase Auth Profile (DisplayName and PhotoURL)
+      const { updateProfile } = require('firebase/auth') as typeof import('firebase/auth');
+      const auth = getFirebaseAuth();
+      if (auth.currentUser) {
+        await updateProfile(auth.currentUser, {
+          displayName: profileName.trim(),
+          photoURL: profilePhotoUrl || null
+        });
+      }
+
+      // 3. Update Firestore User Document
+      const { doc, updateDoc } = getFirestoreModule();
+      const db = getFirestoreDb();
+      await updateDoc(doc(db, 'users', user.uid), {
+        displayName: profileName.trim(),
+        photoURL: profilePhotoUrl || null,
+      });
+
+      setNewPassword('');
+      setConfirmPassword('');
+
+      toast('Profile updated successfully!', 'success');
+    } catch (err: any) {
+      console.error('Profile update error:', err);
+      if (err.code === 'auth/requires-recent-login') {
+        toast('Please log out and log back in to change your password.', 'error');
+      } else {
+        toast(err.message || 'Error updating profile', 'error');
+      }
+    } finally {
+      setUpdatingProfile(false);
     }
   }
 
@@ -902,6 +1010,120 @@ export default function AccountPage() {
     </div>
   );
 
+  const renderProfileTab = () => (
+    <div className={styles.tabView}>
+      <div className={styles.header}>
+        <h1 className="text-display">Profile Settings</h1>
+        <p className={styles.subhead}>Update your profile picture, display name, and password.</p>
+      </div>
+
+      <div style={{ maxWidth: '600px' }}>
+        <section className={styles.card}>
+          <form onSubmit={handleProfileUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            
+            {/* Avatar Section */}
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Profile Picture</label>
+              <div className={styles.avatarSection}>
+                <div className={styles.avatarContainer}>
+                  {profilePhotoUrl ? (
+                    <img src={profilePhotoUrl} alt="Profile" className={styles.avatarImage} referrerPolicy="no-referrer" />
+                  ) : (
+                    profileName ? profileName.charAt(0).toUpperCase() : '?'
+                  )}
+                  <div className={styles.avatarOverlay} onClick={() => fileInputRef.current?.click()}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#fff', textAlign: 'center' }}>
+                      {uploadingPhoto ? '...' : 'Upload'}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingPhoto}
+                  >
+                    {uploadingPhoto ? 'Uploading...' : 'Choose Image'}
+                  </button>
+                  <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                    Max 2MB. Jpeg, Png or WebP.
+                  </p>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handlePhotoUpload}
+                    accept="image/*"
+                    className={styles.avatarUploadInput}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Display Name */}
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Display Name</label>
+              <input
+                type="text"
+                value={profileName}
+                onChange={(e) => setProfileName(e.target.value)}
+                placeholder="Your Name"
+                required
+                className={styles.formInput}
+              />
+            </div>
+
+            {/* Email (Disabled as requested) */}
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Email Address (Cannot be changed)</label>
+              <input
+                type="email"
+                value={user.email}
+                disabled
+                className={styles.formInput}
+                style={{ opacity: 0.5, cursor: 'not-allowed' }}
+              />
+            </div>
+
+            {/* Password Fields */}
+            <div className={styles.profileGrid}>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>New Password (Optional)</label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="At least 6 chars"
+                  className={styles.formInput}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Confirm Password</label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Repeat password"
+                  className={styles.formInput}
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={updatingProfile}
+              className={`btn btn-secondary ${styles.savePrefsBtn}`}
+              style={{ marginTop: '0.5rem' }}
+            >
+              {updatingProfile ? 'Saving Changes...' : 'Save Profile'}
+            </button>
+          </form>
+        </section>
+      </div>
+    </div>
+  );
+
   // State-driven sidebar container rendering
 
   return (
@@ -938,6 +1160,12 @@ export default function AccountPage() {
           >
             🎁 My Rewards {hasReward && <span className={styles.rewardsBadge}>!</span>}
           </button>
+          <button
+            onClick={() => setActiveTab('profile')}
+            className={`${styles.sidebarButton} ${activeTab === 'profile' ? styles.sidebarButtonActive : ''}`}
+          >
+            👤 Profile Settings
+          </button>
         </aside>
 
         {/* Content Pane */}
@@ -946,6 +1174,7 @@ export default function AccountPage() {
           {activeTab === 'payouts' && renderPayoutsTab()}
           {activeTab === 'analytics' && renderAnalyticsTab()}
           {activeTab === 'rewards' && renderRewardsTab()}
+          {activeTab === 'profile' && renderProfileTab()}
         </main>
       </div>
     </div>
