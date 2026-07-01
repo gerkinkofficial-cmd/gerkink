@@ -29,20 +29,18 @@ if (getApps().length === 0) {
 
 const db = getFirestore();
 
-async function getUserEmail() {
-  const uid = 'M2SxWt1bqcdmDnxjuLlDBuqfmrp2';
+async function getProductData() {
+  const pid = 'JaOi0V0NL8uM1JiYNwo6';
   try {
-    const doc = await db.collection('users').doc(uid).get();
+    const doc = await db.collection('products').doc(pid).get();
     if (doc.exists) {
-      console.log(`User UID: ${uid}`);
-      console.log(`    Email: ${doc.data().email}`);
-      console.log(`    DisplayName: ${doc.data().displayName}`);
+      console.log('Product data:', JSON.stringify(doc.data(), null, 2));
     } else {
-      console.log(`No user found with UID: ${uid}`);
+      console.log(`No product found with ID: ${pid}`);
     }
   } catch (err) {
     console.error(err);
   }
 }
 
-getUserEmail();
+getProductData();

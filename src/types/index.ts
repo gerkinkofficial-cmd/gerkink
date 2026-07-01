@@ -254,3 +254,15 @@ export interface PayoutRequest {
 
 
 
+
+// --- Reviews ---
+export interface Review {
+  id: string;
+  userId: string;
+  userName: string;
+  userPhoto?: string;
+  rating: number;
+  text: string;
+  createdAt: Date;
+  updatedAt?: Date;
+}

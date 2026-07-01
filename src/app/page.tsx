@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import EgoTicker from '@/components/ui/EgoTicker';
 import LoadingScreen from '@/components/ui/LoadingScreen';
+import ReviewsSection from '@/components/reviews/ReviewsSection';
 import { getFirestoreDb, getFirestoreModule } from '@/lib/firebase/config';
 import styles from './page.module.css';
 
@@ -155,6 +156,9 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+
+      {/* ── REVIEWS ───────────────────────────────────────────── */}
+      <ReviewsSection />
 
       {/* ── BRAND STATEMENT ──────────────────────────────────── */}
       <section className={styles.statement}>
