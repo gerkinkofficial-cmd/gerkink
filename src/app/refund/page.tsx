@@ -26,9 +26,9 @@ export default function RefundPage() {
           <div className={styles.section}>
             <h2 className={styles.sectionTitle}>1. No Refunds</h2>
             <p className={styles.bodyText}>
-              We enforce a strict <span className={styles.emphasis}>No Refunds</span> policy on all purchases. 
-              Once an order is paid and submitted, Printify automatically prints it. We do not refund money 
-              because you changed your mind, picked the wrong size, or decided your personal brand isn&apos;t ready 
+              We enforce a strict <span className={styles.emphasis}>No Refunds</span> policy on all purchases.
+              Once an order is paid and submitted, Printify automatically prints it. We do not refund money
+              because you changed your mind, picked the wrong size, or decided your personal brand isn&apos;t ready
               for our clothing.
             </p>
           </div>
@@ -36,8 +36,8 @@ export default function RefundPage() {
           <div className={styles.section}>
             <h2 className={styles.sectionTitle}>2. Replacement Policy</h2>
             <p className={styles.bodyText}>
-              If your item arrived damaged, defective, or we sent you the wrong design/size by mistake, we will gladly 
-              issue a <span className={styles.emphasis}>Free Replacement</span>. 
+              If your item arrived damaged, defective, or we sent you the wrong design/size by mistake, we will gladly
+              issue a <span className={styles.emphasis}>Free Replacement</span>.
             </p>
             <p className={styles.bodyText}>
               To initiate a replacement, you must contact us within 14 days of delivery.
@@ -47,7 +47,7 @@ export default function RefundPage() {
           <div className={styles.section}>
             <h2 className={styles.sectionTitle}>3. How to Request a Replacement</h2>
             <p className={styles.bodyText}>
-              Please email us at <span className={styles.emphasis}>support@gerkink.com</span> or submit a message on our{' '}
+              Please email us at <span className={styles.emphasis}>gerkinkofficial@gmail.com</span> or submit a message on our{' '}
               <Link href="/contact" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>
                 Contact Page
               </Link>.
