@@ -29,18 +29,52 @@ if (getApps().length === 0) {
 
 const db = getFirestore();
 
-async function getProductData() {
+async function updateProductVariants() {
   const pid = 'JaOi0V0NL8uM1JiYNwo6';
+  
+  const colors = [
+    { name: 'White', hex: '#ffffff' },
+    { name: 'Black', hex: '#111111' },
+    { name: 'Navy', hex: '#1a2436' },
+    { name: 'Ash Grey', hex: '#b5b8bd' },
+    { name: 'Coral Pink', hex: '#ff6b6b' }
+  ];
+
+  const sizes = ['S', 'M', 'L', 'XL'];
+  const basePrice = 28.99;
+
+  const variants = [];
+  let idCounter = 18539;
+
+  colors.forEach(color => {
+    sizes.forEach(size => {
+      variants.push({
+        id: String(idCounter++),
+        size: size,
+        color: color.name,
+        colorHex: color.hex,
+        price: basePrice,
+        available: true,
+        printifyVariantId: String(idCounter)
+      });
+    });
+  });
+
   try {
-    const doc = await db.collection('products').doc(pid).get();
-    if (doc.exists) {
-      console.log('Product data:', JSON.stringify(doc.data(), null, 2));
-    } else {
-      console.log(`No product found with ID: ${pid}`);
+    const docRef = db.collection('products').doc(pid);
+    const doc = await docRef.get();
+    if (!doc.exists) {
+      console.error(`Product not found: ${pid}`);
+      return;
     }
+    
+    await docRef.update({
+      variants: variants
+    });
+    console.log(`Successfully updated variants for product ${pid}. Added ${variants.length} color/size variants!`);
   } catch (err) {
-    console.error(err);
+    console.error('Error updating product variants:', err);
   }
 }
 
-getProductData();
+updateProductVariants();
