@@ -71,15 +71,17 @@ export async function POST(request: NextRequest) {
       ...result.data,
       images: result.data.images && result.data.images.length > 0 ? result.data.images : ['/placeholder-product.png'],
       videos: result.data.videos || [],
-      variants: [
-        {
-          id: `custom_${Date.now()}`,
-          size: 'One Size',
-          color: 'Default',
-          price: result.data.price,
-          available: true,
-        },
-      ],
+      variants: result.data.variants && result.data.variants.length > 0
+        ? result.data.variants
+        : [
+            {
+              id: `custom_${Date.now()}`,
+              size: 'One Size',
+              color: 'Default',
+              price: result.data.price,
+              available: true,
+            },
+          ],
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     };

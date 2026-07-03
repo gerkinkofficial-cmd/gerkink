@@ -20,12 +20,75 @@ export default function AddProductPage() {
   const [isPublished, setIsPublished] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  // Variants Manager State
+  const [hasVariants, setHasVariants] = useState(false);
+  const [variantsColors, setVariantsColors] = useState<Array<{ name: string; hex: string }>>([]);
+  const [variantsSizes, setVariantsSizes] = useState<string[]>([]);
+  const [variantsList, setVariantsList] = useState<Array<{
+    id: string;
+    size: string;
+    color: string;
+    colorHex?: string;
+    price: number;
+    available: boolean;
+  }>>([]);
+
+  // Color Input State
+  const [newColorName, setNewColorName] = useState('');
+  const [newColorHex, setNewColorHex] = useState('#ffffff');
+
   // Media states
   const [productId, setProductId] = useState('');
   const [images, setImages] = useState<string[]>([]);
   const [videos, setVideos] = useState<string[]>([]);
   const [uploadProgress, setUploadProgress] = useState<{ [filename: string]: number }>({});
   const [uploading, setUploading] = useState(false);
+
+  // Sync variant combinations state on change
+  useEffect(() => {
+    if (!hasVariants) {
+      setVariantsList([]);
+      return;
+    }
+
+    const activeColors = variantsColors.length > 0 ? variantsColors : [{ name: 'Default', hex: '#ffffff' }];
+    const activeSizes = variantsSizes.length > 0 ? variantsSizes : ['One Size'];
+
+    const newList: typeof variantsList = [];
+    let idCounter = Date.now();
+
+    activeColors.forEach((c) => {
+      activeSizes.forEach((s) => {
+        const existing = variantsList.find((v) => v.color === c.name && v.size === s);
+        newList.push({
+          id: existing?.id || `custom_${idCounter++}`,
+          size: s,
+          color: c.name,
+          colorHex: c.hex,
+          price: existing ? existing.price : (Number(price) || 0),
+          available: existing ? existing.available : true,
+        });
+      });
+    });
+
+    setVariantsList(newList);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasVariants, variantsColors, variantsSizes]);
+
+  // Update prices on base price change for non-customized variants
+  useEffect(() => {
+    if (!hasVariants || variantsList.length === 0) return;
+    setVariantsList((prev) =>
+      prev.map((v) => {
+        // If the variant's price matches the previous price (or is 0), update it to new base price
+        return {
+          ...v,
+          price: v.price === 0 ? (Number(price) || 0) : v.price
+        };
+      })
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [price]);
 
   // Initialize Product ID on load
   useEffect(() => {
@@ -145,6 +208,7 @@ export default function AddProductPage() {
           isPublished,
           images,
           videos,
+          variants: hasVariants ? variantsList : undefined,
         }),
       });
 
@@ -417,6 +481,195 @@ export default function AddProductPage() {
             </select>
           </div>
         )}
+
+        {/* Variants Manager Section */}
+        <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <input
+              type="checkbox"
+              id="hasVariants"
+              checked={hasVariants}
+              onChange={(e) => setHasVariants(e.target.checked)}
+              style={{ cursor: 'pointer' }}
+            />
+            <label htmlFor="hasVariants" style={{ cursor: 'pointer', fontSize: '0.85rem', fontWeight: 'bold' }}>
+              This product has multiple color or size options
+            </label>
+          </div>
+
+          {hasVariants && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', background: 'var(--surface-2)', padding: '1.5rem', borderRadius: '4px', border: '1px solid var(--border)' }}>
+              
+              {/* Color Configuration */}
+              <div>
+                <label className="input-label" style={{ marginBottom: '0.5rem' }}>Configure Colors</label>
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                  <input
+                    type="text"
+                    className="input"
+                    value={newColorName}
+                    onChange={(e) => setNewColorName(e.target.value)}
+                    placeholder="e.g. White, Black, Navy"
+                    style={{ background: 'var(--surface-1)' }}
+                  />
+                  <input
+                    type="color"
+                    value={newColorHex}
+                    onChange={(e) => setNewColorHex(e.target.value)}
+                    style={{ width: '44px', height: '44px', padding: '0', border: '1px solid var(--border)', background: 'transparent', cursor: 'pointer', borderRadius: '4px' }}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => {
+                      if (!newColorName.trim()) {
+                        toast('Color name is required', 'error');
+                        return;
+                      }
+                      if (variantsColors.some((c) => c.name.toLowerCase() === newColorName.trim().toLowerCase())) {
+                        toast('Color already added', 'error');
+                        return;
+                      }
+                      setVariantsColors((prev) => [...prev, { name: newColorName.trim(), hex: newColorHex }]);
+                      setNewColorName('');
+                    }}
+                  >
+                    Add Color
+                  </button>
+                </div>
+
+                {variantsColors.length > 0 && (
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    {variantsColors.map((color, index) => (
+                      <div
+                        key={color.name + index}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          background: 'var(--surface-1)',
+                          border: '1px solid var(--border)',
+                          padding: '0.25rem 0.5rem 0.25rem 0.25rem',
+                          borderRadius: '2px',
+                          fontSize: '0.75rem'
+                        }}
+                      >
+                        <span style={{ display: 'inline-block', width: '16px', height: '16px', borderRadius: '50%', background: color.hex, border: '1px solid var(--border)' }} />
+                        <span>{color.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => setVariantsColors((prev) => prev.filter((_, i) => i !== index))}
+                          style={{ background: 'transparent', border: 'none', color: 'var(--accent)', cursor: 'pointer', padding: '0 0.25rem', fontWeight: 'bold' }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Size Configuration */}
+              <div>
+                <label className="input-label" style={{ marginBottom: '0.5rem' }}>Configure Sizes</label>
+                <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+                  {['S', 'M', 'L', 'XL', 'XXL', '3XL', 'One Size'].map((size) => {
+                    const isChecked = variantsSizes.includes(size);
+                    return (
+                      <label key={size} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => {
+                            if (isChecked) {
+                              setVariantsSizes((prev) => prev.filter((s) => s !== size));
+                            } else {
+                              setVariantsSizes((prev) => [...prev, size]);
+                            }
+                          }}
+                          style={{ cursor: 'pointer' }}
+                        />
+                        <span>{size}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Generated Variants Pricing Table */}
+              {variantsList.length > 0 && (
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1rem', marginTop: '0.5rem' }}>
+                  <label className="input-label" style={{ marginBottom: '0.5rem' }}>Manage Variants Matrix ({variantsList.length})</label>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.75rem', fontStyle: 'italic' }}>
+                    Adjust custom pricing or availability for specific color/size options.
+                  </p>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '300px', overflowY: 'auto', border: '1px solid var(--border)', borderRadius: '2px', background: 'var(--surface-1)' }}>
+                    {variantsList.map((variant, index) => (
+                      <div
+                        key={variant.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '1rem',
+                          padding: '0.5rem 0.75rem',
+                          borderBottom: index < variantsList.length - 1 ? '1px solid var(--border)' : 'none',
+                          opacity: variant.available ? 1 : 0.5
+                        }}
+                      >
+                        {/* Variant Info */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: '1', minWidth: '0' }}>
+                          {variant.colorHex && (
+                            <span style={{ display: 'inline-block', width: '12px', height: '12px', borderRadius: '50%', background: variant.colorHex, border: '1px solid var(--border)', flexShrink: 0 }} />
+                          )}
+                          <span style={{ fontSize: '0.8rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {variant.color} / {variant.size}
+                          </span>
+                        </div>
+
+                        {/* Custom Price & Availability controls */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>$</span>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0.01"
+                              value={variant.price}
+                              onChange={(e) => {
+                                const val = Number(e.target.value) || 0;
+                                setVariantsList((prev) =>
+                                  prev.map((v, i) => (i === index ? { ...v, price: val } : v))
+                                );
+                              }}
+                              style={{ width: '70px', padding: '0.25rem 0.5rem', fontSize: '0.75rem', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: '2px', color: 'var(--text-primary)' }}
+                            />
+                          </div>
+
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', cursor: 'pointer' }}>
+                            <input
+                              type="checkbox"
+                              checked={variant.available}
+                              onChange={(e) => {
+                                const val = e.target.checked;
+                                setVariantsList((prev) =>
+                                  prev.map((v, i) => (i === index ? { ...v, available: val } : v))
+                                );
+                              }}
+                              style={{ cursor: 'pointer' }}
+                            />
+                            <span>Active</span>
+                          </label>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem' }}>
           <input

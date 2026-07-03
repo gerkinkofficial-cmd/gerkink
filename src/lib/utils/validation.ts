@@ -80,6 +80,18 @@ export const createProductSchema = z.object({
   isPublished: z.boolean().default(false),
   images: z.array(z.string()).optional(),
   videos: z.array(z.string()).optional(),
+  variants: z
+    .array(
+      z.object({
+        id: z.string(),
+        size: z.string(),
+        color: z.string(),
+        colorHex: z.string().optional(),
+        price: z.number().positive(),
+        available: z.boolean().default(true),
+      })
+    )
+    .optional(),
 });
 
 export type CreateProductInput = z.infer<typeof createProductSchema>;
