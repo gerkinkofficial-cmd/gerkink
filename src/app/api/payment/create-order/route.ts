@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
   }
 
-  const { items, referralCode, couponCode, shippingAddress, paymentMethod } = result.data;
+  const { items, referralCode, couponCode, shippingAddress } = result.data;
 
   // 3. Validate prices against Firestore (prevent tampering)
   const orderItems: OrderItem[] = [];
@@ -110,9 +110,8 @@ export async function POST(request: NextRequest) {
     tax,
     discount,
     total,
-    razorpayOrderId: '', 
-    paymentMethod:   paymentMethod || 'razorpay',
-    status:          paymentMethod === 'crypto' ? 'awaiting_crypto_verification' : 'pending',
+    razorpayOrderId: '', // filled next
+    status:          'pending',
     referralCode:    referralCode ?? null,
     couponCode:      couponCode ?? null,
     shippingAddress,
@@ -134,21 +133,7 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  // 6. Handle crypto payment bypass
-  if (paymentMethod === 'crypto') {
-    await orderRef.update({ razorpayOrderId: 'crypto_order' });
-    return NextResponse.json({
-      orderId:         orderRef.id,
-      razorpayOrderId: 'crypto_order',
-      paymentMethod:   'crypto',
-      amount:          total,
-      currency:        'USD',
-      total,
-      discount,
-    });
-  }
-
-  // 7. Create Razorpay order
+  // 6. Create Razorpay order
   let rzpOrder: { id: string; amount: number; currency: string };
   try {
     rzpOrder = await createRazorpayOrder(total, receipt);
@@ -158,7 +143,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Payment gateway error' }, { status: 500 });
   }
 
-  // 8. Update Firestore order with Razorpay order ID
+  // 7. Update Firestore order with Razorpay order ID
   await orderRef.update({ razorpayOrderId: rzpOrder.id });
 
   return NextResponse.json({
