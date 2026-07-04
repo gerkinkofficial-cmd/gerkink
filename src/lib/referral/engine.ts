@@ -28,15 +28,6 @@ export async function processReferral(order: Order): Promise<void> {
   // 3. Block self-referral
   if (affiliateUid === order.userId) return;
 
-  // 4. Check for duplicate referral (one per customer)
-  const existingReferral = await adminDb
-    .collection('referrals')
-    .where('referredUid', '==', order.userId)
-    .limit(1)
-    .get();
-
-  if (!existingReferral.empty) return; // already referred
-
   // 5. Determine commission
   const currentCount: number = affiliateDoc.data().referralCount ?? 0;
   const newCount = currentCount + 1;
