@@ -212,3 +212,6 @@ npm run lint     # ESLint
 | Live Reviews System | `src/app/page.tsx`, `src/components/reviews/*` | Integrated live reviews section with interactive star selector, add/edit modal forms, real-time Firestore synchronization, and rules allowing users edit access and admins deletion rights. |
 | Profile settings Hub | `src/app/account/*`, `src/app/page.module.css` | Created a Profile settings tab inside the account dashboard to support profile image upload to Firebase Storage, name updates, and password changes, leaving email read-only. |
 | Legal & Support Pages | `src/app/terms/*`, `src/app/refund/*`, `src/app/shipping/*`, `src/components/layout/Footer.tsx` | Added Terms & Conditions, Refund & Replace Policy (no refunds, replacements via email), and Shipping Info (14 business days delivery) pages, with footer links and a responsive 4-column footer layout. |
+| Custom Product Variants Manager | `src/app/admin/products/new/*`, `src/app/api/admin/products/*` | Added Variants Manager supporting custom colors (with name + hex), sizes, pricing, and availability matrix. |
+| Crypto Payment Option | `src/app/checkout/*`, `src/app/api/payment/*` | Added manual cryptocurrency payment selection (USDT/USDC on Solana/Ethereum) with TxID input and verification backend, and removed duplicate referral purchase checks. |
+
