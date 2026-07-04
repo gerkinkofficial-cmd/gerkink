@@ -21,9 +21,12 @@ export default function CheckoutPage() {
 
   const [step, setStep]               = useState<Step>('address');
   const [address, setAddress]         = useState<Address | null>(null);
-  const [orderData, setOrderData]     = useState<{ orderId: string; razorpayOrderId: string; amount: number; currency: string } | null>(null);
+  const [orderData, setOrderData]     = useState<{ orderId: string; razorpayOrderId: string; amount: number; currency: string; paymentMethod?: string } | null>(null);
   const [loading, setLoading]         = useState(false);
   const [errors, setErrors]           = useState<Record<string, string>>({});
+  const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'crypto'>('razorpay');
+  const [txHash, setTxHash]           = useState('');
+  const [submittingCrypto, setSubmittingCrypto] = useState(false);
 
   // Coupon state
   const [couponInput, setCouponInput]         = useState('');
@@ -142,6 +145,7 @@ export default function CheckoutPage() {
           referralCode: referralCode || undefined,
           couponCode: appliedCoupon || undefined,
           shippingAddress: result.data,
+          paymentMethod,
         }),
       });
 
@@ -220,6 +224,60 @@ export default function CheckoutPage() {
                 </div>
               ))}
 
+              {/* Payment Method Selector */}
+              <div style={{ margin: '1.5rem 0 0.5rem 0' }}>
+                <label className="input-label" style={{ marginBottom: '0.75rem', display: 'block', fontWeight: 'bold' }}>Payment Method</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <label style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    padding: '1rem',
+                    border: `1px solid ${paymentMethod === 'razorpay' ? 'var(--text-primary)' : 'var(--border)'}`,
+                    background: paymentMethod === 'razorpay' ? 'var(--surface-2)' : 'transparent',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}>
+                    <input
+                      type="radio"
+                      name="payment_method"
+                      checked={paymentMethod === 'razorpay'}
+                      onChange={() => setPaymentMethod('razorpay')}
+                      style={{ cursor: 'pointer' }}
+                    />
+                    <div>
+                      <span style={{ fontWeight: 'bold', display: 'block', fontSize: '0.9rem', color: 'var(--text-primary)' }}>Credit Card / UPI</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.2rem' }}>Secure checkout via Razorpay gateway</span>
+                    </div>
+                  </label>
+
+                  <label style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    padding: '1rem',
+                    border: `1px solid ${paymentMethod === 'crypto' ? 'var(--text-primary)' : 'var(--border)'}`,
+                    background: paymentMethod === 'crypto' ? 'var(--surface-2)' : 'transparent',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}>
+                    <input
+                      type="radio"
+                      name="payment_method"
+                      checked={paymentMethod === 'crypto'}
+                      onChange={() => setPaymentMethod('crypto')}
+                      style={{ cursor: 'pointer' }}
+                    />
+                    <div>
+                      <span style={{ fontWeight: 'bold', display: 'block', fontSize: '0.9rem', color: 'var(--text-primary)' }}>Cryptocurrency (USDT/USDC)</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.2rem' }}>Pay with stablecoins directly on Ethereum, Polygon, or Solana networks</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
               <button type="submit" disabled={loading} className="btn btn-primary btn-lg btn-full">
                 {loading ? 'Processing...' : 'Continue to Payment →'}
               </button>
@@ -242,6 +300,77 @@ export default function CheckoutPage() {
                     {loading ? 'Placing Order...' : 'Confirm Free Order →'}
                   </button>
                 </>
+              ) : orderData.paymentMethod === 'crypto' ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                  <p className={styles.paymentNote}>
+                    To complete your order, transfer exactly <strong>${grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })} USDT / USDC</strong> to one of the public wallets below.
+                  </p>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', background: 'var(--surface-2)', padding: '1.25rem', borderRadius: '4px', border: '1px solid var(--border)' }}>
+                    <div>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: '0.25rem' }}>USDT / USDC (Solana Network - SPL)</span>
+                      <code style={{ fontSize: '0.85rem', wordBreak: 'break-all', display: 'block', background: 'var(--surface-1)', padding: '0.5rem', borderRadius: '2px', border: '1px solid var(--border)', fontFamily: 'monospace' }}>
+                        7xL2Z8tM1Xp4Jm9wKqyR5dV6bN3uG1hE8cW8sQ4aT7yN
+                      </code>
+                    </div>
+
+                    <div>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: '0.25rem' }}>USDT / USDC (Ethereum / Polygon - ERC20)</span>
+                      <code style={{ fontSize: '0.85rem', wordBreak: 'break-all', display: 'block', background: 'var(--surface-1)', padding: '0.5rem', borderRadius: '2px', border: '1px solid var(--border)', fontFamily: 'monospace' }}>
+                        0x9E7F6A8B5C3D1E4028A94F7B3625D184E9C0A2D3
+                      </code>
+                    </div>
+
+                    <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1rem', marginTop: '0.5rem' }}>
+                      <label className="input-label" style={{ marginBottom: '0.5rem', display: 'block', fontWeight: 'bold' }}>Submit Transaction Hash (TxID)</label>
+                      <input
+                        type="text"
+                        className="input"
+                        placeholder="e.g. 0x4f8a... or Solana signature"
+                        value={txHash}
+                        onChange={(e) => setTxHash(e.target.value)}
+                        style={{ background: 'var(--surface-1)' }}
+                      />
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.25rem', fontStyle: 'italic' }}>
+                        Paste the transaction hash / ID from your wallet after transferring the funds.
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    disabled={submittingCrypto || !txHash.trim()}
+                    onClick={async () => {
+                      if (!txHash.trim()) return;
+                      setSubmittingCrypto(true);
+                      try {
+                        const res = await fetch('/api/payment/verify-crypto', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            orderId: orderData.orderId,
+                            txHash: txHash.trim(),
+                          }),
+                        });
+                        
+                        if (!res.ok) {
+                          const err = await res.json();
+                          throw new Error(err.error || 'Failed to submit transaction');
+                        }
+
+                        toast('Transaction submitted! We will verify it and update your order.', 'success');
+                        clearCart();
+                        router.push('/account');
+                      } catch (err: any) {
+                        toast(err.message || 'Error submitting transaction hash', 'error');
+                      } finally {
+                        setSubmittingCrypto(false);
+                      }
+                    }}
+                    className="btn btn-primary btn-lg btn-full"
+                  >
+                    {submittingCrypto ? 'Submitting Hash...' : 'Submit Crypto Order →'}
+                  </button>
+                </div>
               ) : (
                 <>
                   <p className={styles.paymentNote}>

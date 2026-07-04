@@ -48,6 +48,7 @@ export const createOrderSchema = z.object({
   referralCode: z.string().optional(),
   couponCode: z.string().optional(),
   shippingAddress: addressSchema,
+  paymentMethod: z.enum(['razorpay', 'crypto']).optional(),
 });
 
 export const verifyPaymentSchema = z.object({
